@@ -14,6 +14,6 @@ pipelines:
                       - git clone https://github.com/nrk/phpiredis.git && cd phpiredis && phpize && ./configure --enable-phpiredis && make && make install && cd ..
                       - docker-php-ext-enable phpiredis igbinary zip xdebug
                       - composer install
-                      - composer test
+                      - XDEBUG_MODE=coverage composer test
                       - COVERAGE=`cat coverage.txt`
                       - curl -X POST -H 'Content-Type:application/json' -d "{\"disable_notification\":false,\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"[${BITBUCKET_REPO_FULL_NAME}] success, coverage (${BITBUCKET_COMMIT}) ${COVERAGE}\"}" -X POST https://api.telegram.org/bot${TELEGRAM_BOT_ID}/sendMessage
