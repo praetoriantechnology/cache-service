@@ -1,0 +1,16 @@
+image: php:7.4.7-cli
+
+pipelines:
+    branches:
+        master:
+            - step:
+                  script:
+                      - apt-get update && apt-get install -y curl git
+                      - docker-php-ext-configure igbinary && docker-php-ext-install igbinary
+                      - git clone https://github.com/nrk/phpiredis.git && cd phpiredis && phpize && ./configure --enable-phpiredis && make && make install
+                      - COMMIT_MESSAGE=`git log --format='%B' -n 1 $BITBUCKET_COMMIT`
+                      - curl -X POST -H 'Content-Type:application/json' -d "{\"disable_notification\":false,\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"[${BITBUCKET_REPO_FULL_NAME}] testing started (${BITBUCKET_COMMIT}) ${COMMIT_MESSAGE}\"}" -X POST https://api.telegram.org/bot${TELEGRAM_BOT_ID}/sendMessage
+                      - composer install
+                      - composer test
+                      - COVERAGE=`cat coverage.txt`
+                      - curl -X POST -H 'Content-Type:application/json' -d "{\"disable_notification\":false,\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"[${BITBUCKET_REPO_FULL_NAME}] success, coverage (${BITBUCKET_COMMIT}) ${COVERAGE}\"}" -X POST https://api.telegram.org/bot${TELEGRAM_BOT_ID}/sendMessage

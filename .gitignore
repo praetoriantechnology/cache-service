@@ -55,3 +55,4 @@ Thumbs.db
 *.bak
 *.cache
 composer.lock
+coverage.txt
