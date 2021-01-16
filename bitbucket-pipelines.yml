@@ -6,6 +6,7 @@ pipelines:
             - step:
                   script:
                       - apt-get update && apt-get install -y curl git libhiredis-dev
+                      - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
                       - COMMIT_MESSAGE=`git log --format='%B' -n 1 $BITBUCKET_COMMIT`
                       - curl -X POST -H 'Content-Type:application/json' -d "{\"disable_notification\":false,\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"[${BITBUCKET_REPO_FULL_NAME}] testing started (${BITBUCKET_COMMIT}) ${COMMIT_MESSAGE}\"}" -X POST https://api.telegram.org/bot${TELEGRAM_BOT_ID}/sendMessage
                       - git clone https://github.com/nrk/phpiredis.git && cd phpiredis && phpize && ./configure --enable-phpiredis && make && make install && cd ..
