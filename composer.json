@@ -1,0 +1,39 @@
+{
+    "name": "praetoriantechnology/cache-service",
+    "description": "Caching service",
+    "type": "library",
+    "license": ": MIT",
+    "authors": [
+        {
+            "name": "Bartosz from Praetorian Technology",
+            "email": "bartosz@praetorian.technology",
+            "role": "Lead Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "ext-phpiredis": "*",
+        "ext-igbinary": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Preatorian\\Prometheus\\CacheService\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Preatorian\\Tests\\Prometheus\\CacheService\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/phpunit/phpunit/phpunit",
+        "fix": "./vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "php-mock/php-mock": "^2.3",
+        "php-mock/php-mock-phpunit": "^2.6",
+        "friendsofphp/php-cs-fixer": "^2.17"
+    }
+}
