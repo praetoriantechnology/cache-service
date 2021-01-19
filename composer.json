@@ -18,12 +18,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Preatorian\\Prometheus\\CacheService\\": "src/"
+            "Praetorian\\Prometheus\\CacheService\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Preatorian\\Tests\\Prometheus\\CacheService\\": "tests/"
+            "Praetorian\\Tests\\Prometheus\\CacheService\\": "tests/"
         }
     },
     "scripts": {
