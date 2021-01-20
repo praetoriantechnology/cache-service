@@ -12,10 +12,14 @@ class RedisCacheService implements CacheServiceInterface
 
     /** @var $redis */
     private $redis;
+    private $host;
+    private $port;
 
     public function __construct(string $host, ?int $port = null)
     {
-        $this->redis = phpiredis_pconnect($host, $port);
+        $this->host = $host;
+        $this->port = $port;
+        $this->reconnect();
     }
 
     /**
@@ -23,6 +27,7 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function getTagged(string $tag): Generator
     {
+        $this->reconnect();
         $members = phpiredis_command_bs($this->getRedis(), ['SMEMBERS', $tag]);
         if (empty($members)) {
             yield from [];
@@ -44,6 +49,7 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function set(string $key, $value, $tag = null, $ttl = null): self
     {
+        $this->reconnect();
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
         phpiredis_multi_command_bs($this->getRedis(), $operations);
 
@@ -55,6 +61,7 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function get(string $key)
     {
+        $this->reconnect();
         $value = phpiredis_command_bs($this->getRedis(), [
             'GET', $key,
         ]);
@@ -71,6 +78,7 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function delete(string $key): self
     {
+        $this->reconnect();
         phpiredis_command_bs($this->getRedis(), [
             'DEL', $key,
         ]);
@@ -83,6 +91,7 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function clear(): self
     {
+        $this->reconnect();
         phpiredis_command_bs($this->getRedis(), [
             'FLUSHALL',
         ]);
@@ -123,5 +132,14 @@ class RedisCacheService implements CacheServiceInterface
         }
 
         return $operations;
+    }
+
+    private function reconnect()
+    {
+        if ($this->redis === false || $this->redis === null) {
+            $this->redis = phpiredis_connect($this->host, $this->port);
+        }
+
+        return $this;
     }
 }

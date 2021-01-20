@@ -16,10 +16,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testConstructor(): void
     {
-        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_pconnect');
+        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_connect');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->disableOriginalConstructor()
+            ->setMethodsExcept(['reconnect'])
             ->getMock();
 
         $phpiredisConnect->expects($this->exactly(2))->withConsecutive([
@@ -35,7 +36,7 @@ final class RedisCacheServiceTest extends TestCase
     public function testGetRedis()
     {
         $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
-        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_pconnect');
+        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_connect');
 
         $phpiredisConnect->expects($this->once())->willReturn('fake_redis');
 
