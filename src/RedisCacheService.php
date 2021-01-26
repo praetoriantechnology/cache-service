@@ -104,6 +104,39 @@ class RedisCacheService implements CacheServiceInterface
         return $this->redis;
     }
 
+
+    /**
+     * {@inheritdoc}
+     */
+    public function enqueue($queue, $value): self
+    {
+        $this->reconnect();
+
+        phpiredis_command_bs($this->getRedis(), [
+            'RPUSH', $queue, igbinary_serialize($value)
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function pop($queue)
+    {
+        $this->reconnect();
+
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'LPOP', $queue
+        ]);
+
+        if (!$item) {
+            return null;
+        }
+
+        return igbinary_unserialize($item);
+    }
+
     /**
      * Prepares a single set command.
      *

@@ -50,4 +50,14 @@ interface CacheServiceInterface
      * their
      */
     public function getTagged(string $tag): Generator;
+
+    /**
+     * Puts entry on top of a queue.
+     */
+    public function enqueue(string $queue, $value): CacheServiceInterface;
+
+    /**
+     * Pops out first element from the queue.
+     */
+    public function pop(string $queue);
 }
