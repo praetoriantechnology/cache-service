@@ -175,4 +175,24 @@ class RedisCacheService implements CacheServiceInterface
 
         return $this;
     }
+
+    public function tagEntry($id, $tag)
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'SADD', $tag, $key
+        ]);
+
+        return $this;
+    }
+
+    public function untagEntry($key, $tag)
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'SREM', $tag, $key
+        ]);
+
+        return $this;
+    }
 }
