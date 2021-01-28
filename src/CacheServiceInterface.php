@@ -60,4 +60,8 @@ interface CacheServiceInterface
      * Pops out first element from the queue.
      */
     public function pop(string $queue);
+
+    public function tag($key, $tag): CacheServiceInterface;
+
+    public function untag($key, $tag): CacheServiceInterface;
 }
