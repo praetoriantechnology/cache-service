@@ -122,19 +122,32 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function pop($queue)
+    public function pop($queue, int $range = 1)
     {
         $this->reconnect();
+        if ($range === 1) {
+            $item = phpiredis_command_bs($this->getRedis(), [
+                'LPOP', $queue
+            ]);
 
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'LPOP', $queue
+            if (!$item) {
+                return null;
+            }
+
+            return igbinary_unserialize($item);
+        }
+
+        $items = phpiredis_command_bs($this->getRedis(), [
+            'LRANGE', $queue, 0, $range
         ]);
 
-        if (!$item) {
+        if (!$items) {
             return null;
         }
 
-        return igbinary_unserialize($item);
+        foreach ($items as $item) {
+            yield igbinary_unserialize($item);
+        }
     }
 
     /**
