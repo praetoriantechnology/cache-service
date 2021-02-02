@@ -145,9 +145,12 @@ class RedisCacheService implements CacheServiceInterface
             return null;
         }
 
+        $itemsParsed = [];
         foreach ($items as $item) {
-            yield igbinary_unserialize($item);
+            $itemsParsed[] = igbinary_unserialize($item);
         }
+
+        return $itemsParsed;
     }
 
     /**
