@@ -8,7 +8,7 @@ use InvalidArgumentException;
 class RedisCacheService implements CacheServiceInterface
 {
     const MIN_TTL = 1;
-    const MAX_TTL = 3600;
+    const MAX_TTL = 30 * 24 * 3600;
 
     /** @var $redis */
     private $redis;
