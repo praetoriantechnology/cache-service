@@ -12,18 +12,18 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^8.0",
         "ext-phpiredis": "*",
         "ext-igbinary": "*"
     },
     "autoload": {
         "psr-4": {
-            "Praetorian\\Prometheus\\CacheService\\": "src/"
+            "Praetorian\\CacheService\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Praetorian\\Tests\\Prometheus\\CacheService\\": "tests/"
+            "Praetorian\\Tests\\CacheService\\": "tests/"
         }
     },
     "scripts": {

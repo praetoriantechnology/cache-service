@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Praetorian\Tests\Prometheus\CacheService;
+namespace Praetorian\Tests\CacheService;
 
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Praetorian\Prometheus\CacheService\RedisCacheService;
+use Praetorian\CacheService\RedisCacheService;
 use ReflectionClass;
 
 final class RedisCacheServiceTest extends TestCase
@@ -16,7 +16,7 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testConstructor(): void
     {
-        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_connect');
+        $phpiredisConnect = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_connect');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->disableOriginalConstructor()
@@ -35,8 +35,8 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testGetRedis()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
-        $phpiredisConnect = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_connect');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+        $phpiredisConnect = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_connect');
 
         $phpiredisConnect->expects($this->once())->willReturn('fake_redis');
 
@@ -52,14 +52,14 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testClear()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
-            ->setMethodsExcept(['clear'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['reconnect', 'getRedis'])
             ->disableOriginalConstructor()
             ->getMock();
 
+        $mock->method('reconnect')->willReturn(null);
         $mock->method('getRedis')->willReturn('fake_redis');
 
         $phpiredisCommandBs->expects($this->once())->with('fake_redis', ['FLUSHALL']);
@@ -69,11 +69,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testDelete()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['delete'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -90,6 +90,7 @@ final class RedisCacheServiceTest extends TestCase
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set', 'buildSetCommand'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -103,6 +104,7 @@ final class RedisCacheServiceTest extends TestCase
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set', 'buildSetCommand'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -112,11 +114,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testSet_single()
     {
-        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_multi_command_bs');
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -134,11 +136,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testSet_tag()
     {
-        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_multi_command_bs');
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -158,11 +160,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testSet_ttl()
     {
-        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_multi_command_bs');
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -181,11 +183,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testSet_ttlAndTag()
     {
-        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_multi_command_bs');
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['set'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -206,11 +208,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testGetTagged_empty()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['getTagged'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -223,11 +225,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testGetTagged()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['getTagged', 'get'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -249,11 +251,11 @@ final class RedisCacheServiceTest extends TestCase
 
     public function testGet()
     {
-        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\Prometheus\CacheService', 'phpiredis_command_bs');
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
         $mock = $this->getMockBuilder(static::TESTED_CLASS)
             ->setMethodsExcept(['get'])
-            ->onlyMethods(['getRedis'])
+            ->onlyMethods(['getRedis', 'reconnect'])
             ->disableOriginalConstructor()
             ->getMock();
 

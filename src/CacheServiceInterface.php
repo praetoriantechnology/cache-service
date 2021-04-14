@@ -1,6 +1,6 @@
 <?php
 
-namespace Praetorian\Prometheus\CacheService;
+namespace Praetorian\CacheService;
 
 use Generator;
 
