@@ -1,6 +1,6 @@
 <?php
 
-namespace Praetorian\Prometheus\CacheService;
+namespace Praetorian\CacheService;
 
 use Generator;
 use InvalidArgumentException;
@@ -12,13 +12,11 @@ class RedisCacheService implements CacheServiceInterface
 
     /** @var $redis */
     private $redis;
-    private $host;
-    private $port;
 
-    public function __construct(string $host, ?int $port = null)
+    public function __construct(
+        private string $host,
+        private ?int $port = null)
     {
-        $this->host = $host;
-        $this->port = $port;
         $this->reconnect();
     }
 
@@ -99,12 +97,6 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    protected function getRedis()
-    {
-        return $this->redis;
-    }
-
-
     /**
      * {@inheritdoc}
      */
@@ -113,7 +105,7 @@ class RedisCacheService implements CacheServiceInterface
         $this->reconnect();
 
         phpiredis_command_bs($this->getRedis(), [
-            'RPUSH', $queue, igbinary_serialize($value)
+            'RPUSH', $queue, igbinary_serialize($value),
         ]);
 
         return $this;
@@ -127,7 +119,7 @@ class RedisCacheService implements CacheServiceInterface
         $this->reconnect();
         if ($range === 1) {
             $item = phpiredis_command_bs($this->getRedis(), [
-                'LPOP', $queue
+                'LPOP', $queue,
             ]);
 
             if (!$item) {
@@ -138,7 +130,7 @@ class RedisCacheService implements CacheServiceInterface
         }
 
         $items = phpiredis_command_bs($this->getRedis(), [
-            'LRANGE', $queue, 0, $range
+            'LRANGE', $queue, 0, $range,
         ]);
 
         if (!$items) {
@@ -151,6 +143,31 @@ class RedisCacheService implements CacheServiceInterface
         }
 
         return $itemsParsed;
+    }
+
+    public function tag($key, $tag): self
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'SADD', $tag, $key,
+        ]);
+
+        return $this;
+    }
+
+    public function untag($key, $tag): self
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'SREM', $tag, $key,
+        ]);
+
+        return $this;
+    }
+
+    protected function getRedis()
+    {
+        return $this->redis;
     }
 
     /**
@@ -183,31 +200,11 @@ class RedisCacheService implements CacheServiceInterface
         return $operations;
     }
 
-    private function reconnect()
+    protected function reconnect()
     {
-        if ($this->redis === false || $this->redis === null) {
+        if ($this->getRedis() === false || $this->getRedis() === null) {
             $this->redis = phpiredis_connect($this->host, $this->port);
         }
-
-        return $this;
-    }
-
-    public function tag($key, $tag): self
-    {
-        $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SADD', $tag, $key
-        ]);
-
-        return $this;
-    }
-
-    public function untag($key, $tag): self
-    {
-        $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SREM', $tag, $key
-        ]);
 
         return $this;
     }
