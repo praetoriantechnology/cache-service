@@ -64,4 +64,8 @@ interface CacheServiceInterface
     public function tag($key, $tag): CacheServiceInterface;
 
     public function untag($key, $tag): CacheServiceInterface;
+
+    public function increase($key, int $value): CacheServiceInterface;
+
+    public function decrease($key, int $value): CacheServiceInterface;
 }

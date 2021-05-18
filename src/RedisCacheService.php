@@ -71,6 +71,26 @@ class RedisCacheService implements CacheServiceInterface
         return igbinary_unserialize($value);
     }
 
+    public function increase($key, int $value): self
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'INCRBY', $key, $value,
+        ]);
+
+        return $this;
+    }
+
+    public function decrease($key, int $value): self
+    {
+        $this->reconnect();
+        $item = phpiredis_command_bs($this->getRedis(), [
+            'INCRBY', $key, -1 * $value,
+        ]);
+
+        return $this;
+    }
+
     /**
      * {@inheritdoc}
      */
