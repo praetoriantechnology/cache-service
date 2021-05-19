@@ -68,6 +68,10 @@ class RedisCacheService implements CacheServiceInterface
             return null;
         }
 
+        if ($skipDeserialize) {
+            return $value;
+        }
+
         return igbinary_unserialize($value);
     }
 
