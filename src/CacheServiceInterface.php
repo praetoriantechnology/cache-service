@@ -13,7 +13,7 @@ interface CacheServiceInterface
      * @param string $key
      * @return mixed|null
      */
-    public function get(string $key);
+    public function get(string $key, bool $skipDeserialize = false);
 
     /**
      * Sets the given object under the given key.

@@ -57,7 +57,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function get(string $key)
+    public function get(string $key, bool $skipDeserialize = false)
     {
         $this->reconnect();
         $value = phpiredis_command_bs($this->getRedis(), [
