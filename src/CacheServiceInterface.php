@@ -46,6 +46,14 @@ interface CacheServiceInterface
     public function clear(): ?CacheServiceInterface;
 
     /**
+     * Deletes all entries under given tag.
+     *
+     * @param string $tag
+     * @return CacheServiceInterface
+     */
+    public function clearByTag(string $tag): CacheServiceInterface;
+
+    /**
      * Gets an array of unserialized objects from under a given tag ordered by
      * their
      */
