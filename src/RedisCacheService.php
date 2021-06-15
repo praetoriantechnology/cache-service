@@ -189,6 +189,21 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function clearByTag(string $tag): CacheServiceInterface
+    {
+        $this->reconnect();
+        $members = phpiredis_command_bs($this->getRedis(), ['SMEMBERS', $tag]);
+
+        foreach ($members as $member) {
+            $this->delete($member);
+        }
+
+        return $this;
+    }
+
     protected function getRedis()
     {
         return $this->redis;
