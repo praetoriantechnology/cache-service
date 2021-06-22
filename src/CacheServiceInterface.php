@@ -11,9 +11,9 @@ interface CacheServiceInterface
      * object does not exist.
      *
      * @param string $key
-     * @return mixed|null
+     * @return mixed
      */
-    public function get(string $key, bool $skipDeserialize = false);
+    public function get(string $key, bool $skipDeserialize = false): mixed;
 
     /**
      * Sets the given object under the given key.
@@ -23,12 +23,12 @@ interface CacheServiceInterface
      * TTL sets time-to-live in seconds: 0 or null disables TTL.
      *
      * @param string $key
-     * @param $value
+     * @param mixed $value
      * @param null|string $tag
      * @param null|int $ttl
      * @return CacheServiceInterface
      */
-    public function set(string $key, $value, ?string $tag = null, ?int $ttl = null): CacheServiceInterface;
+    public function set(string $key, mixed $value, ?string $tag = null, ?int $ttl = null): CacheServiceInterface;
 
     /**
      * Deletes entry under given key.
@@ -62,18 +62,18 @@ interface CacheServiceInterface
     /**
      * Puts entry on top of a queue.
      */
-    public function enqueue(string $queue, $value): CacheServiceInterface;
+    public function enqueue(string $queue, mixed $value): CacheServiceInterface;
 
     /**
      * Pops out first element from the queue.
      */
-    public function pop(string $queue, int $range = 1);
+    public function pop(string $queue, int $range = 1): mixed;
 
-    public function tag($key, $tag): CacheServiceInterface;
+    public function tag(string $key, string $tag): CacheServiceInterface;
 
-    public function untag($key, $tag): CacheServiceInterface;
+    public function untag(string $key, string $tag): CacheServiceInterface;
 
-    public function increase($key, int $value): CacheServiceInterface;
+    public function increase(string $key, int $value): CacheServiceInterface;
 
-    public function decrease($key, int $value): CacheServiceInterface;
+    public function decrease(string $key, int $value): CacheServiceInterface;
 }

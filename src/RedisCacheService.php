@@ -45,7 +45,7 @@ class RedisCacheService implements CacheServiceInterface
      * {@inheritdoc}
      * @throws InvalidArgumentException
      */
-    public function set(string $key, $value, $tag = null, $ttl = null): self
+    public function set(string $key, mixed $value, $tag = null, $ttl = null): self
     {
         $this->reconnect();
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
@@ -57,7 +57,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function get(string $key, bool $skipDeserialize = false)
+    public function get(string $key, bool $skipDeserialize = false): mixed
     {
         $this->reconnect();
         $value = phpiredis_command_bs($this->getRedis(), [
@@ -75,7 +75,7 @@ class RedisCacheService implements CacheServiceInterface
         return igbinary_unserialize($value);
     }
 
-    public function increase($key, int $value): self
+    public function increase(string $key, int $value): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -85,7 +85,7 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function decrease($key, int $value): self
+    public function decrease(string $key, int $value): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -124,7 +124,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function enqueue($queue, $value): self
+    public function enqueue(string $queue, mixed $value): self
     {
         $this->reconnect();
 
@@ -138,7 +138,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function pop($queue, int $range = 1)
+    public function pop(string $queue, int $range = 1): mixed
     {
         $this->reconnect();
         if ($range === 1) {
@@ -169,7 +169,7 @@ class RedisCacheService implements CacheServiceInterface
         return $itemsParsed;
     }
 
-    public function tag($key, $tag): self
+    public function tag(string $key, string $tag): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -179,7 +179,7 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function untag($key, $tag): self
+    public function untag(string $key, string $tag): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -213,13 +213,13 @@ class RedisCacheService implements CacheServiceInterface
      * Prepares a single set command.
      *
      * @param string $key
-     * @param object $value
+     * @param mixed $value
      * @param null|string $tag
      * @param null|int $ttl
      * @throws InvalidArgumentException
      * @return array
      */
-    protected function buildSetCommand(string $key, $value, ?string $tag = null, ?int $ttl = null): array
+    protected function buildSetCommand(string $key, mixed $value, ?string $tag = null, ?int $ttl = null): array
     {
         $operations = [];
         if ($ttl !== null) {
