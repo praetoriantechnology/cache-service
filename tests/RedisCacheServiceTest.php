@@ -272,4 +272,219 @@ final class RedisCacheServiceTest extends TestCase
         $this->assertNull($mock->get('sample_key1'));
         $this->assertEquals('testdata1', $mock->get('sample_key2'));
     }
+
+    public function testGet_skipDeserialize()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['get'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->exactly(2))->withConsecutive(
+            ['fake_redis', ['GET', 'sample_key1']],
+            ['fake_redis', ['GET', 'sample_key2']]
+        )->willReturnOnConsecutiveCalls(
+            null,
+            igbinary_serialize('testdata1')
+        );
+
+        $this->assertNull($mock->get('sample_key1', true));
+        $this->assertEquals(igbinary_serialize('testdata1'), $mock->get('sample_key2', true));
+    }
+
+    public function testIncrease()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['increase'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleValue = 2;
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', [
+            'INCRBY', $sampleKey, $sampleValue,
+        ]);
+
+        $this->assertSame($mock, $mock->increase($sampleKey, $sampleValue));
+    }
+
+    public function testDecrease()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['decrease'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleValue = 1;
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', [
+            'INCRBY', $sampleKey, -1 * $sampleValue,
+        ]);
+
+        $this->assertSame($mock, $mock->decrease($sampleKey, $sampleValue));
+    }
+
+    public function testEnqueue()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['enqueue'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleQueue = 'sample_key';
+        $sampleValue = 3;
+        $sampleValueSerialized = igbinary_serialize($sampleValue);
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', [
+            'RPUSH', $sampleQueue, $sampleValueSerialized,
+        ]);
+
+        $this->assertSame($mock, $mock->enqueue($sampleQueue, $sampleValue));
+    }
+
+    public function testPopOneItem()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['pop'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->exactly(2))->withConsecutive(
+            ['fake_redis', ['LPOP', 'test_empty_queue']],
+            ['fake_redis', ['LPOP', 'test_nonempty_queue']]
+        )->willReturnOnConsecutiveCalls(
+            null,
+            igbinary_serialize('testdata')
+        );
+
+        $this->assertNull($mock->pop('test_empty_queue'));
+        $this->assertEquals('testdata', $mock->pop('test_nonempty_queue'));
+    }
+
+    public function testPopRange()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['pop'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $values = [3, 7, 2, 1];
+        $serializedValues = array_map(function (int $value) {
+            return igbinary_serialize($value);
+        }, $values);
+        $numberOfItems = count($values);
+
+        $phpiredisCommandBs->expects($this->exactly(2))->withConsecutive(
+            ['fake_redis', ['LRANGE', 'test_empty_queue', 0, $numberOfItems]],
+            ['fake_redis', ['LRANGE', 'test_nonempty_queue', 0, $numberOfItems]]
+        )->willReturnOnConsecutiveCalls(
+            null,
+            $serializedValues
+        );
+
+        $this->assertNull($mock->pop('test_empty_queue', $numberOfItems));
+        $this->assertEquals($values, $mock->pop('test_nonempty_queue', $numberOfItems));
+    }
+
+    public function testTag()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['tag'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleTag = 'sample_tag';
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', [
+            'SADD', $sampleTag, $sampleKey,
+        ]);
+
+        $this->assertSame($mock, $mock->tag($sampleKey, $sampleTag));
+    }
+
+    public function testUntag()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['untag'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleTag = 'sample_tag';
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', [
+            'SREM', $sampleTag, $sampleKey,
+        ]);
+
+        $this->assertSame($mock, $mock->untag($sampleKey, $sampleTag));
+    }
+
+    public function testClearByTag()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['clearByTag', 'delete'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleTag = 'sample_tag';
+
+        $phpiredisCommandBs->expects($this->exactly(2))->withConsecutive(
+            ['fake_redis', ['SMEMBERS', $sampleTag]],
+            ['fake_redis', ['DEL', $sampleKey]]
+        )->willReturnOnConsecutiveCalls(
+            [$sampleKey],
+            null,
+        );
+
+        $this->assertSame($mock, $mock->clearByTag($sampleTag));
+    }
 }
