@@ -51,6 +51,15 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
+     * @Given the redis cache instance contains :value under the key :key which is tagged by :tag1 and :tag2
+     */
+    public function theRedisCacheInstanceContainsUnderTheKeyWhichIsTaggedByAnd(mixed $value, string $key, string $tag1, string $tag2)
+    {
+        $this->redisCacheService->set($key, $value, $tag1);
+        $this->redisCacheService->tag($key, $tag2);
+    }
+
+    /**
      * @Given the redis cache instance is clean
      */
     public function theRedisCacheInstanceIsClean()
@@ -185,7 +194,7 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
-     * @Then I should have exactly :n keys tagged by the :tag in the cache
+     * @Then I should have exactly :n key(s) tagged by the :tag in the cache
      */
     public function iShouldHaveExactlyKeysTaggedByTheInTheCache(int $n, string $tag)
     {
