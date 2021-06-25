@@ -8,6 +8,12 @@ Feature: Cache service
     When I add the "example_value" under the "example_key" to the cache
     Then I should have "example_value" under the "example_key" in the cache
 
+  Scenario: It sets and tags value in cache
+    Given the redis cache instance does not contain any value under the key "example_key"
+    When I add the "example_value" under the "example_key" tagged with "example_tag" to the cache
+    Then I should have "example_value" under the "example_key" in the cache
+    And I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
+
   Scenario: It gets existing value from cache
     Given the redis cache instance contains "example_value" under the key "example_key"
     Then I should have "example_value" under the "example_key" in the cache
@@ -21,28 +27,22 @@ Feature: Cache service
     When I delete value under the "example_key" from the cache
     Then I should not have any value under the "example_key" in the cache
 
-  Scenario: It sets and tags value in cache
-    Given the redis cache instance does not contain any value under the key "example_key"
-    When I add the "example_value" under the "example_key" tagged with "example_tag" to the cache
-    Then I should have "example_value" under the "example_key" in the cache
-    And I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
-
   Scenario: It tags existing value in cache
     Given the redis cache instance contains "example_value" under the key "example_key" which is not tagged by "example_tag"
     When I tag the "example_key" with "example_tag"
     Then I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
-
-  Scenario: It untags existing value in cache
-    Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
-    When I untag the "example_key" with "example_tag"
-    Then I should have "example_value" under the "example_key" in the cache
-    And I should not have "example_value" tagged by the "example_tag" under the "example_key" in the cache
 
   Scenario: It tags non-existing key in cache
     Given the redis cache instance does not contain any value under the key "example_key"
     When I tag the "example_key" with "example_tag"
     Then I should not have key "example_key" tagged by the "example_tag" in the cache
     And I should not have any value under the "example_key" in the cache
+
+  Scenario: It untags existing value in cache
+    Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
+    When I untag the "example_key" with "example_tag"
+    Then I should have "example_value" under the "example_key" in the cache
+    And I should not have "example_value" tagged by the "example_tag" under the "example_key" in the cache
 
   Scenario: It deletes tagged key from cache
     Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
