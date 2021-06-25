@@ -64,5 +64,5 @@ Feature: Cache service
     Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
     Given the redis cache instance contains "example_value_2" under the key "example_key_2" which is tagged by "example_tag"
     Then I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
-    And I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
+    And I should have "example_value_2" tagged by the "example_tag" under the "example_key_2" in the cache
     And I should have exactly 2 keys tagged by the "example_tag" in the cache
