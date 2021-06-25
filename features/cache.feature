@@ -3,7 +3,7 @@ Feature: Cache service
   As a developer, a RedisCacheService user
   I need to be able to set, get, tag, delete, etc. cached values
 
-  Scenario: It sets and gets saved value from cache
+  Scenario: It sets value in cache
     Given the redis cache instance does not contain any value under the key "example_key"
     When I add the "example_value" under the "example_key" to the cache
     Then I should have "example_value" under the "example_key" in the cache
