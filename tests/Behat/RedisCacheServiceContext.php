@@ -175,11 +175,7 @@ final class RedisCacheServiceContext implements Context
      */
     public function iShouldNotHaveAnyKeyTaggedByTheInTheCache(string $tag)
     {
-        $items = $this->redisCacheService->getTagged($tag);
-
-        foreach ($items as $itemKey => $itemValue) {
-            throw new \RuntimeException(sprintf('Cache contains key %s tagged by %s', $key, $tag));
-        }
+        $this->iShouldHaveExactlyKeysTaggedByTheInTheCache(0, $tag);
     }
 
     /**
