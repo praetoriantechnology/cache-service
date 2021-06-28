@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Praetorian\Tests\CacheService\Behat;
 
 use Behat\Behat\Context\Context;
+use PHPUnit\Framework\Assert;
 use Praetorian\CacheService\RedisCacheService;
 
 final class RedisCacheServiceContext implements Context
@@ -80,9 +81,9 @@ final class RedisCacheServiceContext implements Context
      */
     public function iShouldHaveUnderTheInTheCache(mixed $value, string $key)
     {
-        if ($this->redisCacheService->get($key) !== $value) {
-            throw new \RuntimeException(sprintf('Wrong value in cache. Received: %s. Expected: %s', $this->redisCacheService->get($key), $value));
-        }
+        $expectedValue = $value;
+        $actualValue = $this->redisCacheService->get($key);
+        Assert::assertEquals($expectedValue, $actualValue);
     }
 
     /**
@@ -98,11 +99,7 @@ final class RedisCacheServiceContext implements Context
      */
     public function iShouldNotHaveAnyValueUnderTheInTheCache(string $key)
     {
-        $value = $this->redisCacheService->get($key);
-
-        if ($value !== null) {
-            throw new \RuntimeException('Wrong value in cache. Expected null');
-        }
+        Assert::assertNull($this->redisCacheService->get($key));
     }
 
     /**
@@ -200,10 +197,6 @@ final class RedisCacheServiceContext implements Context
     {
         $items = $this->redisCacheService->getTagged($tag);
 
-        $numberOfitems = count(iterator_to_array($items));
-
-        if ($numberOfitems !== $n) {
-            throw new \RuntimeException(sprintf('Cache contains %d keys (expected %d) tagged by %s', $numberOfitems, $n, $tag));
-        }
+        Assert::assertCount($n, iterator_to_array($items));
     }
 }
