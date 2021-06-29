@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Praetorian\Tests\CacheService\Behat;
 
 use Behat\Behat\Context\Context;
+use Behat\Gherkin\Node\TableNode;
 use PHPUnit\Framework\Assert;
 use Praetorian\CacheService\RedisCacheService;
 
@@ -12,9 +13,12 @@ final class RedisCacheServiceContext implements Context
 {
     private RedisCacheService $redisCacheService;
 
+    private array $poppedItems;
+
     public function __construct(string $host, ?int $port = null)
     {
         $this->redisCacheService = new RedisCacheService($host, $port);
+        $this->poppedItems = [];
     }
 
     /**
@@ -194,5 +198,92 @@ final class RedisCacheServiceContext implements Context
         $items = $this->redisCacheService->getTagged($tag);
 
         Assert::assertCount($n, iterator_to_array($items));
+    }
+
+    /**
+     * @When I add the :value to the queue :queue
+     */
+    public function iAddTheToTheQueue(mixed $value, string $queue)
+    {
+        $this->redisCacheService->enqueue($queue, $value);
+    }
+
+    /**
+     * @When I add null to the queue :queue
+     */
+    public function iAddNullToTheQueue(string $queue)
+    {
+        $this->redisCacheService->enqueue($queue, null);
+    }
+
+    /**
+     * @When I pop item from the queue :queue
+     */
+    public function iPopItemFromTheQueue(string $queue)
+    {
+        $item = $this->redisCacheService->pop($queue);
+        $this->poppedItems[] = $item;
+    }
+
+    /**
+     * @When I pop everything from the queue :queue
+     */
+    public function iPopEverythingFromTheQueue(string $queue)
+    {
+        while (true) {
+            $item = $this->redisCacheService->pop($queue);
+
+            if ($item === null) {
+                break;
+            }
+
+            $this->poppedItems[] = $item;
+        }
+    }
+
+    /**
+     * @Then I should have the queue :queue containing items in the following order:
+     */
+    public function iShouldHaveTheQueueContainingItemsInTheFollowingOrder(string $queue, TableNode $table)
+    {
+        $expectedValues = $this->transformValuesTable($table);
+
+        $actualValues = $this->getAllItemsFromTheQueue($queue);
+
+        Assert::assertEquals($expectedValues, $actualValues);
+    }
+
+    /**
+     * @Then I should have popped items in the following order:
+     */
+    public function iShouldHavePoppedItemsInTheFollowingOrder(TableNode $table)
+    {
+        $expectedValues = $this->transformValuesTable($table);
+
+        Assert::assertEquals($expectedValues, $this->poppedItems);
+    }
+
+    /**
+     * @Then I should have empty queue :queue
+     */
+    public function iShouldHaveEmptyQueue(string $queue)
+    {
+        Assert::assertCount(0, $this->getAllItemsFromTheQueue($queue));
+    }
+
+    private function getAllItemsFromTheQueue(string $queue): array
+    {
+        return $this->redisCacheService->pop($queue, -1);
+    }
+
+    private function transformValuesTable(TableNode $table): array
+    {
+        $values = [];
+
+        foreach ($table->getRows() as $row) {
+            $values[] = $row[0];
+        }
+
+        return $values;
     }
 }

@@ -109,3 +109,40 @@ Feature: Cache service
     When I add the "example_value_2" under the "example_key" to the cache
     Then I should have "example_value_2" under the "example_key" in the cache
     And I should not have key "example_key" tagged by the "example_tag" in the cache
+
+  Scenario: It adds values to empty queue in cache
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    Then I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+
+  Scenario: It pops only first item from the queue
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    When I pop item from the queue "example_queue"
+    Then I should have popped items in the following order:
+      | example_value |
+    Then I should have the queue "example_queue" containing items in the following order:
+      | example_value_2 |
+      | example_value_3 |
+
+  Scenario: It clears non-empty queue in cache
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    When I add null to the queue "example_queue"
+    When I add the "example_value_4" to the queue "example_queue"
+    When I add the "example_value_5" to the queue "example_queue"
+    When I pop everything from the queue "example_queue"
+    Then I should have popped items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+    And I should have empty queue "example_queue"
