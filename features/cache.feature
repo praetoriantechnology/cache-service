@@ -128,7 +128,7 @@ Feature: Cache service
     When I pop item from the queue "example_queue"
     Then I should have popped items in the following order:
       | example_value |
-    Then I should have the queue "example_queue" containing items in the following order:
+    And I should have the queue "example_queue" containing items in the following order:
       | example_value_2 |
       | example_value_3 |
 
