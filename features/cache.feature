@@ -120,6 +120,18 @@ Feature: Cache service
       | example_value_2 |
       | example_value_3 |
 
+  Scenario: It adds non-unique values to empty queue in cache to prove that it is not a set
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value" to the queue "example_queue"
+    Then I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value   |
+      | example_value_2 |
+      | example_value   |
+
   Scenario: It pops only first item from the queue
     Given the redis cache instance is clean
     When I add the "example_value" to the queue "example_queue"
@@ -131,6 +143,31 @@ Feature: Cache service
     And I should have the queue "example_queue" containing items in the following order:
       | example_value_2 |
       | example_value_3 |
+
+  Scenario: It pops all items from the queue
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I pop item from the queue "example_queue"
+    When I pop item from the queue "example_queue"
+    Then I should have popped items in the following order:
+      | example_value   |
+      | example_value_2 |
+    And I should have empty queue "example_queue"
+
+  Scenario: It pops item adds it to the queue
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    When I pop item from the queue "example_queue"
+    When I add the "example_value" to the queue "example_queue"
+    Then I should have popped items in the following order:
+      | example_value |
+    And I should have the queue "example_queue" containing items in the following order:
+      | example_value_2 |
+      | example_value_3 |
+      | example_value   |
 
   Scenario: It clears non-empty queue in cache
     Given the redis cache instance is clean
@@ -146,3 +183,43 @@ Feature: Cache service
       | example_value_2 |
       | example_value_3 |
     And I should have empty queue "example_queue"
+
+  Scenario: It retrieves items from the queue without dequeuing them (pop range)
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    When I add the "example_value_4" to the queue "example_queue"
+    When I add the "example_value_5" to the queue "example_queue"
+    When I pop range "2" from the queue "example_queue"
+    Then I should have retrieved items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+    And I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+      | example_value_4 |
+      | example_value_5 |
+
+  Scenario: It retrieves items from the queue without dequeuing them (pop with negative range)
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    When I add the "example_value_4" to the queue "example_queue"
+    When I add the "example_value_5" to the queue "example_queue"
+    When I pop range "-2" from the queue "example_queue"
+    Then I should have retrieved items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+      | example_value_4 |
+    And I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+      | example_value_4 |
+      | example_value_5 |
+

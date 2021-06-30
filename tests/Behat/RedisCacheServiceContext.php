@@ -15,10 +15,13 @@ final class RedisCacheServiceContext implements Context
 
     private array $poppedItems;
 
+    private array $retrievedItems;
+
     public function __construct(string $host, ?int $port = null)
     {
         $this->redisCacheService = new RedisCacheService($host, $port);
         $this->poppedItems = [];
+        $this->retrievedItems = [];
     }
 
     /**
@@ -242,6 +245,14 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
+     * @When I pop range :range from the queue :queue
+     */
+    public function iPopRangeItemsFromTheQueue(int $range, string $queue)
+    {
+        $this->retrievedItems = $this->redisCacheService->pop($queue, $range);
+    }
+
+    /**
      * @Then I should have the queue :queue containing items in the following order:
      */
     public function iShouldHaveTheQueueContainingItemsInTheFollowingOrder(string $queue, TableNode $table)
@@ -269,6 +280,16 @@ final class RedisCacheServiceContext implements Context
     public function iShouldHaveEmptyQueue(string $queue)
     {
         Assert::assertCount(0, $this->getAllItemsFromTheQueue($queue));
+    }
+
+    /**
+     * @Then I should have retrieved items in the following order:
+     */
+    public function iShouldHaveRetrievedItemsInTheFollowingOrder(TableNode $table)
+    {
+        $expectedValues = $this->transformValuesTable($table);
+
+        Assert::assertEquals($expectedValues, $this->retrievedItems);
     }
 
     private function getAllItemsFromTheQueue(string $queue): array
