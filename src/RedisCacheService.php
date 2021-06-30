@@ -157,10 +157,6 @@ class RedisCacheService implements CacheServiceInterface
             'LRANGE', $queue, 0, $range,
         ]);
 
-        if (!$items) {
-            return null;
-        }
-
         $itemsParsed = [];
         foreach ($items as $item) {
             $itemsParsed[] = igbinary_unserialize($item);

@@ -410,11 +410,11 @@ final class RedisCacheServiceTest extends TestCase
             ['fake_redis', ['LRANGE', 'test_empty_queue', 0, $numberOfItems]],
             ['fake_redis', ['LRANGE', 'test_nonempty_queue', 0, $numberOfItems]]
         )->willReturnOnConsecutiveCalls(
-            null,
+            [],
             $serializedValues
         );
 
-        $this->assertNull($mock->pop('test_empty_queue', $numberOfItems));
+        $this->assertEquals([], $mock->pop('test_empty_queue', $numberOfItems));
         $this->assertEquals($values, $mock->pop('test_nonempty_queue', $numberOfItems));
     }
 
