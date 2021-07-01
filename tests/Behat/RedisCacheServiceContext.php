@@ -275,6 +275,16 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
+     * @Then I should have popped null item
+     */
+    public function iShouldHavePoppedNullItem()
+    {
+        $expectedValues = [null];
+
+        Assert::assertEquals($expectedValues, $this->poppedItems);
+    }
+
+    /**
      * @Then I should have empty queue :queue
      */
     public function iShouldHaveEmptyQueue(string $queue)

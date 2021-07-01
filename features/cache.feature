@@ -144,6 +144,12 @@ Feature: Cache service
       | example_value_2 |
       | example_value_3 |
 
+  Scenario: It pops item from empty queue in cache
+    Given the redis cache instance is clean
+    When I pop item from the queue "example_queue"
+    Then I should have popped null item
+    And I should have empty queue "example_queue"
+
   Scenario: It pops all items from the queue
     Given the redis cache instance is clean
     When I add the "example_value" to the queue "example_queue"
