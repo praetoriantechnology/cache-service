@@ -341,7 +341,7 @@ final class RedisCacheServiceTest extends TestCase
         $this->assertSame($mock, $mock->decrease($sampleKey, $sampleValue));
     }
 
-    public function testEnqueue()
+    public function testEnqueueNonNullItem()
     {
         $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
 
@@ -353,7 +353,7 @@ final class RedisCacheServiceTest extends TestCase
 
         $mock->method('getRedis')->willReturn('fake_redis');
 
-        $sampleQueue = 'sample_key';
+        $sampleQueue = 'sample_queue';
         $sampleValue = 3;
         $sampleValueSerialized = igbinary_serialize($sampleValue);
 
@@ -362,6 +362,21 @@ final class RedisCacheServiceTest extends TestCase
         ]);
 
         $this->assertSame($mock, $mock->enqueue($sampleQueue, $sampleValue));
+    }
+
+    public function testEnqueueNullItem()
+    {
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['enqueue'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sampleQueue = 'sample_queue';
+        $sampleValue = null;
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $mock->enqueue($sampleQueue, $sampleValue);
     }
 
     public function testPopOneItem()

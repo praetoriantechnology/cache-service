@@ -123,9 +123,14 @@ class RedisCacheService implements CacheServiceInterface
 
     /**
      * {@inheritdoc}
+     * @throws InvalidArgumentException
      */
     public function enqueue(string $queue, mixed $value): self
     {
+        if ($value === null) {
+            throw new InvalidArgumentException('Can\'t enqueue null item');
+        }
+
         $this->reconnect();
 
         phpiredis_command_bs($this->getRedis(), [
