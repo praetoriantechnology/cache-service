@@ -212,11 +212,14 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
-     * @When I add null to the queue :queue
+     * @When I try to add null item to the queue :queue
      */
-    public function iAddNullToTheQueue(string $queue)
+    public function iTryToAddNullItemToTheQueue(string $queue)
     {
-        $this->redisCacheService->enqueue($queue, null);
+        try {
+            $this->redisCacheService->enqueue($queue, null);
+        } catch (\InvalidArgumentException $e) {
+        }
     }
 
     /**

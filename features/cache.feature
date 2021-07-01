@@ -132,6 +132,26 @@ Feature: Cache service
       | example_value_2 |
       | example_value   |
 
+  Scenario: It tries to add null item to non-empty queue in cache
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I try to add null item to the queue "example_queue"
+    Then I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value_2 |
+
+  Scenario: It tries to add null item then non-null value to non-empty queue in cache
+    Given the redis cache instance is clean
+    When I add the "example_value" to the queue "example_queue"
+    When I add the "example_value_2" to the queue "example_queue"
+    When I try to add null item to the queue "example_queue"
+    When I add the "example_value_3" to the queue "example_queue"
+    Then I should have the queue "example_queue" containing items in the following order:
+      | example_value   |
+      | example_value_2 |
+      | example_value_3 |
+
   Scenario: It pops only first item from the queue
     Given the redis cache instance is clean
     When I add the "example_value" to the queue "example_queue"
@@ -180,9 +200,6 @@ Feature: Cache service
     When I add the "example_value" to the queue "example_queue"
     When I add the "example_value_2" to the queue "example_queue"
     When I add the "example_value_3" to the queue "example_queue"
-    When I add null to the queue "example_queue"
-    When I add the "example_value_4" to the queue "example_queue"
-    When I add the "example_value_5" to the queue "example_queue"
     When I pop everything from the queue "example_queue"
     Then I should have popped items in the following order:
       | example_value   |
