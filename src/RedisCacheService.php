@@ -10,6 +10,8 @@ class RedisCacheService implements CacheServiceInterface
     const MIN_TTL = 1;
     const MAX_TTL = 30 * 24 * 3600;
 
+    private const TAGS_SET_NAME_PREFIX = 'TAGS:';
+
     /** @var $redis */
     private $redis;
 
@@ -51,8 +53,11 @@ class RedisCacheService implements CacheServiceInterface
             throw new InvalidArgumentException('Can\'t set null item');
         }
 
-        $this->reconnect();
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
+
+        $this->untagKeyFromAllTags($key);
+
+        $this->reconnect();
         phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
@@ -104,6 +109,8 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function delete(string $key): self
     {
+        $this->untagKeyFromAllTags($key);
+
         $this->reconnect();
         phpiredis_command_bs($this->getRedis(), [
             'DEL', $key,
@@ -174,12 +181,24 @@ class RedisCacheService implements CacheServiceInterface
         return $itemsParsed;
     }
 
+    /**
+     * {@inheritdoc}
+     * @throws InvalidArgumentException
+     */
     public function tag(string $key, string $tag): self
     {
+        if ($this->get($key) === null) {
+            throw new InvalidArgumentException(sprintf('Can\'t tag non-existing key "%s"', $key));
+        }
+
         $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SADD', $tag, $key,
-        ]);
+
+        $operations = [
+            ['SADD', $tag, $key],
+            ['SADD', self::TAGS_SET_NAME_PREFIX . $key, $tag],
+        ];
+
+        phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
     }
@@ -187,9 +206,13 @@ class RedisCacheService implements CacheServiceInterface
     public function untag(string $key, string $tag): self
     {
         $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SREM', $tag, $key,
-        ]);
+
+        $operations = [
+            ['SREM', $tag, $key],
+            ['SREM', self::TAGS_SET_NAME_PREFIX . $key, $tag],
+        ];
+
+        phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
     }
@@ -239,6 +262,7 @@ class RedisCacheService implements CacheServiceInterface
 
         if ($tag) {
             $operations[] = ['SADD', $tag, $key];
+            $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX . $key, $tag];
         }
 
         return $operations;
@@ -251,5 +275,16 @@ class RedisCacheService implements CacheServiceInterface
         }
 
         return $this;
+    }
+
+    private function untagKeyFromAllTags(string $key): void
+    {
+        $this->reconnect();
+
+        $tags = phpiredis_command_bs($this->getRedis(), ['SMEMBERS', self::TAGS_SET_NAME_PREFIX . $key]);
+
+        foreach ($tags as $tag) {
+            $this->untag($key, $tag);
+        }
     }
 }
