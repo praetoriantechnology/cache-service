@@ -27,7 +27,7 @@ Feature: Cache service
     When I delete value under the "example_key" from the cache
     Then I should not have any value under the "example_key" in the cache
 
-  Scenario: It tags existing value in cache
+  Scenario: It tags existing untagged value in cache
     Given the redis cache instance contains "example_value" under the key "example_key" which is not tagged by "example_tag"
     When I tag the "example_key" with "example_tag"
     Then I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
@@ -44,7 +44,7 @@ Feature: Cache service
     Then I should not have key "example_key" tagged by the "example_tag" in the cache
     And I should not have any value under the "example_key" in the cache
 
-  Scenario: It untags existing value in cache
+  Scenario: It untags existing tagged value in cache
     Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
     When I untag the "example_key" with "example_tag"
     Then I should have "example_value" under the "example_key" in the cache
