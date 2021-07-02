@@ -118,6 +118,18 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
+     * @When I add the :value under the :key with invalid TTL to the cache
+     */
+    public function iAddTheUnderTheWithInvalidTtlToTheCache(mixed $value, string $key)
+    {
+        try {
+            $invalidTtl = RedisCacheService::MIN_TTL - 1;
+            $this->redisCacheService->set($key, $value, null, $invalidTtl);
+        } catch (\InvalidArgumentException $e) {
+        }
+    }
+
+    /**
      * @Then I should have :value tagged by the :tag under the :key in the cache
      */
     public function iShouldHaveTaggedByTheUnderTheInTheCache(mixed $value, string $tag, string $key)

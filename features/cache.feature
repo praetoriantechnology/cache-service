@@ -14,6 +14,11 @@ Feature: Cache service
     Then I should have "example_value" under the "example_key" in the cache
     And I should have "example_value" tagged by the "example_tag" under the "example_key" in the cache
 
+  Scenario: It tries to set value with invalid TTL
+    Given the redis cache instance does not contain any value under the key "example_key"
+    When I add the "example_value" under the "example_key" with invalid TTL to the cache
+    Then I should not have any value under the "example_key" in the cache
+
   Scenario: It gets existing value from cache
     Given the redis cache instance contains "example_value" under the key "example_key"
     Then I should have "example_value" under the "example_key" in the cache
