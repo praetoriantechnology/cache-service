@@ -112,6 +112,18 @@ final class RedisCacheServiceTest extends TestCase
         $mock->set('sample_key', 'any value', null, $ttl);
     }
 
+    public function testSet_invalidValue_null()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['set'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->set('sample_key', null);
+    }
+
     public function testSet_single()
     {
         $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');

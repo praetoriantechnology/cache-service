@@ -47,6 +47,10 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function set(string $key, mixed $value, $tag = null, $ttl = null): self
     {
+        if ($value === null) {
+            throw new InvalidArgumentException('Can\'t set null item');
+        }
+
         $this->reconnect();
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
         phpiredis_multi_command_bs($this->getRedis(), $operations);
