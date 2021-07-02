@@ -168,6 +168,17 @@ final class RedisCacheServiceContext implements Context
     }
 
     /**
+     * @When I try to tag the :key with :tag
+     */
+    public function iTryToTagTheWith(string $key, string $tag)
+    {
+        try {
+            $this->redisCacheService->tag($key, $tag);
+        } catch (\InvalidArgumentException $e) {
+        }
+    }
+
+    /**
      * @When I untag the :key with :tag
      */
     public function iUntagTheWith(string $key, string $tag)
