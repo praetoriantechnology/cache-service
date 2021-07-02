@@ -27,7 +27,12 @@
         }
     },
     "scripts": {
-        "test": "./vendor/phpunit/phpunit/phpunit",
+        "test:unit": "./vendor/phpunit/phpunit/phpunit",
+        "test:functional": "./vendor/bin/behat",
+        "test": [
+            "@test:unit",
+            "@test:functional"
+        ],
         "fix": "./vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix"
     },
     "require-dev": {
