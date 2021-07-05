@@ -5,7 +5,7 @@ pipelines:
         master:
             - step:
                   script:
-                      - apt-get update && apt-get install -y curl git libhiredis-dev libzip-dev zip
+                      - apt-get update && apt-get install -y curl git libhiredis-dev libzip-dev zip redis-server
                       - pecl install igbinary xdebug
                       - docker-php-ext-install zip
                       - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
