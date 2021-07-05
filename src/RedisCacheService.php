@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Praetorian\CacheService;
 
 use Generator;
@@ -7,15 +9,18 @@ use InvalidArgumentException;
 
 class RedisCacheService implements CacheServiceInterface
 {
+    const DEFAULT_REDIS_PORT = 6139;
     const MIN_TTL = 1;
     const MAX_TTL = 30 * 24 * 3600;
 
-    /** @var $redis */
+    private const TAGS_SET_NAME_PREFIX = 'TAGS:';
+
+    /** @var */
     private $redis;
 
     public function __construct(
         private string $host,
-        private ?int $port = null)
+        private ?int $port = self::DEFAULT_REDIS_PORT)
     {
         $this->reconnect();
     }
@@ -33,22 +38,41 @@ class RedisCacheService implements CacheServiceInterface
             return;
         }
 
+        $anyResults = false;
+
         foreach ($members as $member) {
             $memberValue = $this->get($member);
             if ($memberValue) {
+                $anyResults = true;
                 yield $member => $memberValue;
+            } else {
+                $this->delete($member); // fix for expired (TTL) elements which are still in the
             }
+        }
+
+        if (!$anyResults) {
+            yield from [];
+
+            return;
         }
     }
 
     /**
      * {@inheritdoc}
+     *
      * @throws InvalidArgumentException
      */
-    public function set(string $key, $value, $tag = null, $ttl = null): self
+    public function set(string $key, mixed $value, $tag = null, $ttl = null): self
     {
-        $this->reconnect();
+        if (null === $value) {
+            throw new InvalidArgumentException('Can\'t set null item');
+        }
+
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
+
+        $this->untagKeyFromAllTags($key);
+
+        $this->reconnect();
         phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
@@ -57,7 +81,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function get(string $key, bool $skipDeserialize = false)
+    public function get(string $key, bool $skipDeserialize = false): mixed
     {
         $this->reconnect();
         $value = phpiredis_command_bs($this->getRedis(), [
@@ -72,10 +96,10 @@ class RedisCacheService implements CacheServiceInterface
             return $value;
         }
 
-        return igbinary_unserialize($value);
+        return \igbinary_unserialize($value);
     }
 
-    public function increase($key, int $value): self
+    public function increase(string $key, int $value): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -85,7 +109,7 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function decrease($key, int $value): self
+    public function decrease(string $key, int $value): self
     {
         $this->reconnect();
         $item = phpiredis_command_bs($this->getRedis(), [
@@ -100,6 +124,8 @@ class RedisCacheService implements CacheServiceInterface
      */
     public function delete(string $key): self
     {
+        $this->untagKeyFromAllTags($key);
+
         $this->reconnect();
         phpiredis_command_bs($this->getRedis(), [
             'DEL', $key,
@@ -123,13 +149,19 @@ class RedisCacheService implements CacheServiceInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @throws InvalidArgumentException
      */
-    public function enqueue($queue, $value): self
+    public function enqueue(string $queue, mixed $value): self
     {
+        if (null === $value) {
+            throw new InvalidArgumentException('Can\'t enqueue null item');
+        }
+
         $this->reconnect();
 
         phpiredis_command_bs($this->getRedis(), [
-            'RPUSH', $queue, igbinary_serialize($value),
+            'RPUSH', $queue, \igbinary_serialize($value),
         ]);
 
         return $this;
@@ -138,10 +170,10 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function pop($queue, int $range = 1)
+    public function pop(string $queue, int $range = 1): mixed
     {
         $this->reconnect();
-        if ($range === 1) {
+        if (1 === $range) {
             $item = phpiredis_command_bs($this->getRedis(), [
                 'LPOP', $queue,
             ]);
@@ -150,41 +182,54 @@ class RedisCacheService implements CacheServiceInterface
                 return null;
             }
 
-            return igbinary_unserialize($item);
+            return \igbinary_unserialize($item);
         }
 
         $items = phpiredis_command_bs($this->getRedis(), [
             'LRANGE', $queue, 0, $range,
         ]);
 
-        if (!$items) {
-            return null;
-        }
-
         $itemsParsed = [];
         foreach ($items as $item) {
-            $itemsParsed[] = igbinary_unserialize($item);
+            $itemsParsed[] = \igbinary_unserialize($item);
         }
 
         return $itemsParsed;
     }
 
-    public function tag($key, $tag): self
+    /**
+     * {@inheritdoc}
+     *
+     * @throws InvalidArgumentException
+     */
+    public function tag(string $key, string $tag): self
     {
+        if (null === $this->get($key)) {
+            throw new InvalidArgumentException(\sprintf('Can\'t tag non-existing key "%s"', $key));
+        }
+
         $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SADD', $tag, $key,
-        ]);
+
+        $operations = [
+            ['SADD', $tag, $key],
+            ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag],
+        ];
+
+        phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
     }
 
-    public function untag($key, $tag): self
+    public function untag(string $key, string $tag): self
     {
         $this->reconnect();
-        $item = phpiredis_command_bs($this->getRedis(), [
-            'SREM', $tag, $key,
-        ]);
+
+        $operations = [
+            ['SREM', $tag, $key],
+            ['SREM', self::TAGS_SET_NAME_PREFIX.$key, $tag],
+        ];
+
+        phpiredis_multi_command_bs($this->getRedis(), $operations);
 
         return $this;
     }
@@ -212,28 +257,24 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * Prepares a single set command.
      *
-     * @param string $key
-     * @param object $value
-     * @param null|string $tag
-     * @param null|int $ttl
      * @throws InvalidArgumentException
-     * @return array
      */
-    protected function buildSetCommand(string $key, $value, ?string $tag = null, ?int $ttl = null): array
+    protected function buildSetCommand(string $key, mixed $value, ?string $tag = null, ?int $ttl = null): array
     {
         $operations = [];
-        if ($ttl !== null) {
+        if (null !== $ttl) {
             if ($ttl < static::MIN_TTL || $ttl > static::MAX_TTL) {
-                throw new InvalidArgumentException(sprintf('TTL must be a value between (including) %d and %d. Provided: %d.', static::MIN_TTL, static::MAX_TTL, $ttl));
+                throw new InvalidArgumentException(\sprintf('TTL must be a value between (including) %d and %d. Provided: %d.', static::MIN_TTL, static::MAX_TTL, $ttl));
             }
 
-            $operations[] = ['SETEX', $key, $ttl, igbinary_serialize($value)];
+            $operations[] = ['SETEX', $key, $ttl, \igbinary_serialize($value)];
         } else {
-            $operations[] = ['SET', $key, igbinary_serialize($value)];
+            $operations[] = ['SET', $key, \igbinary_serialize($value)];
         }
 
         if ($tag) {
             $operations[] = ['SADD', $tag, $key];
+            $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag];
         }
 
         return $operations;
@@ -241,10 +282,21 @@ class RedisCacheService implements CacheServiceInterface
 
     protected function reconnect()
     {
-        if ($this->getRedis() === false || $this->getRedis() === null) {
+        if (false === $this->getRedis() || null === $this->getRedis()) {
             $this->redis = phpiredis_connect($this->host, $this->port);
         }
 
         return $this;
+    }
+
+    private function untagKeyFromAllTags(string $key): void
+    {
+        $this->reconnect();
+
+        $tags = phpiredis_command_bs($this->getRedis(), ['SMEMBERS', self::TAGS_SET_NAME_PREFIX.$key]);
+
+        foreach ($tags as $tag) {
+            $this->untag($key, $tag);
+        }
     }
 }
