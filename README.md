@@ -8,4 +8,6 @@ objects' groups.
 Use `CacheServiceInterface` for implementation of caching services, use
 `RedisCacheService` for fast Redis handling.
 
+# TODO
 
+- Functional test for expired tagged elements.

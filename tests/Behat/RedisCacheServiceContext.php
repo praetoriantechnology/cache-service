@@ -142,7 +142,7 @@ final class RedisCacheServiceContext implements Context
             }
         }
 
-        throw new \RuntimeException(sprintf('Cache does not contain value %s tagged by %s', $value, $tag));
+        throw new \RuntimeException(\sprintf('Cache does not contain value %s tagged by %s', $value, $tag));
     }
 
     /**
@@ -154,7 +154,7 @@ final class RedisCacheServiceContext implements Context
 
         foreach ($items as $itemKey => $itemValue) {
             if ($itemKey === $key && $itemValue === $value) {
-                throw new \RuntimeException(sprintf('Cache contains value %s tagged by %s', $value, $tag));
+                throw new \RuntimeException(\sprintf('Cache contains value %s tagged by %s', $value, $tag));
             }
         }
     }
@@ -195,7 +195,7 @@ final class RedisCacheServiceContext implements Context
 
         foreach ($items as $itemKey => $itemValue) {
             if ($itemKey === $key) {
-                throw new \RuntimeException(sprintf('Cache contains key %s tagged by %s', $key, $tag));
+                throw new \RuntimeException(\sprintf('Cache contains key %s tagged by %s', $key, $tag));
             }
         }
     }
@@ -223,7 +223,7 @@ final class RedisCacheServiceContext implements Context
     {
         $items = $this->redisCacheService->getTagged($tag);
 
-        Assert::assertCount($n, iterator_to_array($items));
+        Assert::assertCount($n, \iterator_to_array($items));
     }
 
     /**
@@ -262,7 +262,7 @@ final class RedisCacheServiceContext implements Context
         while (true) {
             $item = $this->redisCacheService->pop($queue);
 
-            if ($item === null) {
+            if (null === $item) {
                 break;
             }
 
