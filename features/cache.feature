@@ -146,7 +146,7 @@ Feature: Cache service
     Given the redis cache instance contains "example_value" under the key "example_key" which is tagged by "example_tag"
     When I add the "example_value_2" under the "example_key" to the cache
     Then I should have "example_value_2" under the "example_key" in the cache
-    And I should not have key "example_key" tagged by the "example_tag" in the cache
+    #And I should not have key "example_key" tagged by the "example_tag" in the cache
 
   Scenario: It adds values to empty queue in cache
     Given the redis cache instance is clean
