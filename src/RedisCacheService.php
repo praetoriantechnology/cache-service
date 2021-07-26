@@ -70,7 +70,7 @@ class RedisCacheService implements CacheServiceInterface
 
         $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
 
-        $this->untagKeyFromAllTags($key);
+        //$this->untagKeyFromAllTags($key); Removed 26.07: this causes items to lose other tags
 
         $this->reconnect();
         phpiredis_multi_command_bs($this->getRedis(), $operations);
