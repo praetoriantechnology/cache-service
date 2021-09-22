@@ -289,6 +289,13 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
+    public function getCardinality(string $set): int 
+    {
+        $this->reconnect();
+
+        return phpiredis_command_bs($this->getRedis(), ['SCARD', $set]);
+    }
+
     private function untagKeyFromAllTags(string $key): void
     {
         $this->reconnect();
