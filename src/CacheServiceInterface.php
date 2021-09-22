@@ -65,4 +65,6 @@ interface CacheServiceInterface
     public function increase(string $key, int $value): CacheServiceInterface;
 
     public function decrease(string $key, int $value): CacheServiceInterface;
+
+    public function getCardinality(string $set): int;
 }
