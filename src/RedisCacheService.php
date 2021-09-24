@@ -6,6 +6,7 @@ namespace Praetorian\CacheService;
 
 use Generator;
 use InvalidArgumentException;
+use phpDocumentor\Reflection\DocBlock\Tags\Generic;
 
 class RedisCacheService implements CacheServiceInterface
 {
@@ -62,13 +63,13 @@ class RedisCacheService implements CacheServiceInterface
      *
      * @throws InvalidArgumentException
      */
-    public function set(string $key, mixed $value, $tag = null, $ttl = null): self
+    public function set(string $key, mixed $value, ?string $tag = null, ?int $ttl = null, ?int $score = null): self
     {
         if (null === $value) {
             throw new InvalidArgumentException('Can\'t set null item');
         }
 
-        $operations = $this->buildSetCommand($key, $value, $tag, $ttl);
+        $operations = $this->buildSetCommand($key, $value, $tag, $ttl, $score);
 
         //$this->untagKeyFromAllTags($key); Removed 26.07: this causes items to lose other tags
 
@@ -202,7 +203,7 @@ class RedisCacheService implements CacheServiceInterface
      *
      * @throws InvalidArgumentException
      */
-    public function tag(string $key, string $tag): self
+    public function tag(string $key, string $tag, ?int $score = null): self
     {
         if (null === $this->get($key)) {
             throw new InvalidArgumentException(\sprintf('Can\'t tag non-existing key "%s"', $key));
@@ -211,7 +212,7 @@ class RedisCacheService implements CacheServiceInterface
         $this->reconnect();
 
         $operations = [
-            ['SADD', $tag, $key],
+            [$score > 0 ? 'ZADD' : 'SADD', $tag, $key],
             ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag],
         ];
 
@@ -220,12 +221,12 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function untag(string $key, string $tag): self
+    public function untag(string $key, string $tag, bool $wasScored = false): self
     {
         $this->reconnect();
 
         $operations = [
-            ['SREM', $tag, $key],
+            [ $wasScored ? 'ZREM' : 'SREM', $tag, $key],
             ['SREM', self::TAGS_SET_NAME_PREFIX.$key, $tag],
         ];
 
@@ -259,7 +260,7 @@ class RedisCacheService implements CacheServiceInterface
      *
      * @throws InvalidArgumentException
      */
-    protected function buildSetCommand(string $key, mixed $value, ?string $tag = null, ?int $ttl = null): array
+    protected function buildSetCommand(string $key, mixed $value, ?string $tag = null, ?int $ttl = null, ?int $score =  null): array
     {
         $operations = [];
         if (null !== $ttl) {
@@ -273,7 +274,12 @@ class RedisCacheService implements CacheServiceInterface
         }
 
         if ($tag) {
-            $operations[] = ['SADD', $tag, $key];
+            if ($score > 0) {
+                $operations[] = ['ZADD', $tag, $score, $key];
+            } else {
+                $operations[] = ['SADD', $tag, $key];
+            }
+            
             $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag];
         }
 
@@ -289,11 +295,40 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function getCardinality(string $set): int 
+    public function getCardinality(string $set, bool $sortedSet = false): int 
     {
         $this->reconnect();
 
-        return phpiredis_command_bs($this->getRedis(), ['SCARD', $set]);
+        return phpiredis_command_bs($this->getRedis(), [$sortedSet ? 'ZCARD' : 'SCARD', $set]);
+    }
+
+    public function getSorted(string $set, int $count, int $offset = 0): Generator 
+    {
+        $this->reconnect();
+        $members = phpiredis_command_bs($this->getRedis(), ['ZREVRANGE', $set, $offset, $ocunt]);
+        if (empty($members)) {
+            yield from [];
+
+            return;
+        }
+
+        $anyResults = false;
+
+        foreach ($members as $member) {
+            $memberValue = $this->get($member);
+            if ($memberValue) {
+                $anyResults = true;
+                yield $member => $memberValue;
+            } else {
+                $this->delete($member); // fix for expired (TTL) elements which are still in the
+            }
+        }
+
+        if (!$anyResults) {
+            yield from [];
+
+            return;
+        }
     }
 
     private function untagKeyFromAllTags(string $key): void
