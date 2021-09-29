@@ -305,7 +305,7 @@ class RedisCacheService implements CacheServiceInterface
     public function getSorted(string $set, int $count, int $offset = 0): Generator 
     {
         $this->reconnect();
-        $members = phpiredis_command_bs($this->getRedis(), ['ZREVRANGE', $set, $offset, $ocunt]);
+        $members = phpiredis_command_bs($this->getRedis(), ['ZREVRANGE', $set, $offset, $count]);
         if (empty($members)) {
             yield from [];
 

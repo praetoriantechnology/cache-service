@@ -69,3 +69,4 @@ interface CacheServiceInterface
     public function getCardinality(string $set): int;
 
     public function getSorted(string $set, int $count, int $offset): Generator;
+}
