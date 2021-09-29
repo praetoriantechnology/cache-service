@@ -21,7 +21,7 @@ interface CacheServiceInterface
      *
      * TTL sets time-to-live in seconds: 0 or null disables TTL.
      */
-    public function set(string $key, mixed $value, ?string $tag = null, ?int $ttl = null): CacheServiceInterface;
+    public function set(string $key, mixed $value, ?string $tag = null, ?int $ttl = null, ?int $score = null): CacheServiceInterface;
 
     /**
      * Deletes entry under given key.
@@ -58,13 +58,15 @@ interface CacheServiceInterface
      */
     public function pop(string $queue, int $range = 1): mixed;
 
-    public function tag(string $key, string $tag): CacheServiceInterface;
+    public function tag(string $key, string $tag, ?int $score = null): CacheServiceInterface;
 
-    public function untag(string $key, string $tag): CacheServiceInterface;
+    public function untag(string $key, string $tag, bool $wasScored = false): CacheServiceInterface;
 
     public function increase(string $key, int $value): CacheServiceInterface;
 
     public function decrease(string $key, int $value): CacheServiceInterface;
 
     public function getCardinality(string $set): int;
+
+    public function getSorted(string $set, int $count, int $offset): Generator;
 }
