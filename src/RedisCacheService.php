@@ -211,6 +211,8 @@ class RedisCacheService implements CacheServiceInterface
 
         $this->reconnect();
 
+        $operations = [];
+
         if ($score > 0) {
             $operations[] = [
                 ['ZADD', $tag, $score, $key]
