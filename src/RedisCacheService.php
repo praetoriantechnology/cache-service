@@ -215,13 +215,14 @@ class RedisCacheService implements CacheServiceInterface
 
         if ($score > 0) {
             $operations[] = [
-                ['ZADD', $tag, $score, $key]
+                'ZADD', $tag, $score, $key
             ]; 
         } else {
             $operations[] = [
-                ['SADD', $tag, $key]
+                'SADD', $tag, $key
             ];    
         }
+
 
         $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag];
 
