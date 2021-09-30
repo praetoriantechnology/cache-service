@@ -211,10 +211,20 @@ class RedisCacheService implements CacheServiceInterface
 
         $this->reconnect();
 
-        $operations = [
-            [$score > 0 ? 'ZADD' : 'SADD', $tag, $key],
-            ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag],
-        ];
+        $operations = [];
+
+        if ($score > 0) {
+            $operations[] = [
+                'ZADD', $tag, $score, $key
+            ]; 
+        } else {
+            $operations[] = [
+                'SADD', $tag, $key
+            ];    
+        }
+
+
+        $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag];
 
         phpiredis_multi_command_bs($this->getRedis(), $operations);
 
