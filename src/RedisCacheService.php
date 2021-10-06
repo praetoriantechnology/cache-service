@@ -312,10 +312,11 @@ class RedisCacheService implements CacheServiceInterface
         return phpiredis_command_bs($this->getRedis(), [$sortedSet ? 'ZCARD' : 'SCARD', $set]);
     }
 
-    public function getSorted(string $set, int $count, int $offset = 0): Generator 
+    public function getSorted(string $set, int $count, int $offset = 0, bool $reversed = false): Generator
     {
+        $command = $reversed ? 'ZREVRANGE' : 'ZRANGE';
         $this->reconnect();
-        $members = phpiredis_command_bs($this->getRedis(), ['ZREVRANGE', $set, $offset, $count]);
+        $members = phpiredis_command_bs($this->getRedis(), [$command, $set, $offset, $count]);
         if (empty($members)) {
             yield from [];
 
