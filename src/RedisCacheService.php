@@ -23,6 +23,7 @@ class RedisCacheService implements CacheServiceInterface
         private string $host,
         private ?int $port = self::DEFAULT_REDIS_PORT)
     {
+        var_dump($host);
         $this->reconnect();
     }
 
@@ -153,7 +154,7 @@ class RedisCacheService implements CacheServiceInterface
      *
      * @throws InvalidArgumentException
      */
-    public function enqueue(string $queue, mixed $value): self
+    public function enqueue(string $queue, mixed $value, bool $skipSerialization = false): self
     {
         if (null === $value) {
             throw new InvalidArgumentException('Can\'t enqueue null item');
@@ -162,7 +163,7 @@ class RedisCacheService implements CacheServiceInterface
         $this->reconnect();
 
         phpiredis_command_bs($this->getRedis(), [
-            'RPUSH', $queue, \igbinary_serialize($value),
+            'RPUSH', $queue, ($skipSerialization ? $value : \igbinary_serialize($value)),
         ]);
 
         return $this;
@@ -171,7 +172,7 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function pop(string $queue, int $range = 1): mixed
+    public function pop(string $queue, int $range = 1, bool $skipSerialization = false): mixed
     {
         $this->reconnect();
         if (1 === $range) {
@@ -183,7 +184,7 @@ class RedisCacheService implements CacheServiceInterface
                 return null;
             }
 
-            return \igbinary_unserialize($item);
+            return $skipSerialization ? $item : \igbinary_unserialize($item);
         }
 
         $items = phpiredis_command_bs($this->getRedis(), [
@@ -192,7 +193,7 @@ class RedisCacheService implements CacheServiceInterface
 
         $itemsParsed = [];
         foreach ($items as $item) {
-            $itemsParsed[] = \igbinary_unserialize($item);
+            $itemsParsed[] = $skipSerialization ? $item : \igbinary_unserialize($item);
         }
 
         return $itemsParsed;
@@ -216,11 +217,11 @@ class RedisCacheService implements CacheServiceInterface
         if ($score !== null) {
             $operations[] = [
                 'ZADD', $tag, $score, $key
-            ]; 
+            ];
         } else {
             $operations[] = [
                 'SADD', $tag, $key
-            ];    
+            ];
         }
 
 
@@ -289,7 +290,7 @@ class RedisCacheService implements CacheServiceInterface
             } else {
                 $operations[] = ['SADD', $tag, $key];
             }
-            
+
             $operations[] = ['SADD', self::TAGS_SET_NAME_PREFIX.$key, $tag];
         }
 
@@ -305,11 +306,34 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function getCardinality(string $set, bool $sortedSet = false): int 
+    public function getCardinality(string $set, bool $sortedSet = false): int
     {
         $this->reconnect();
 
         return phpiredis_command_bs($this->getRedis(), [$sortedSet ? 'ZCARD' : 'SCARD', $set]);
+    }
+
+    public function getQueueLength(string $queue): int
+    {
+        $this->reconnect();
+
+        return phpiredis_command_bs($this->getRedis(), ['LLEN', $queue]);
+    }
+
+    public function getQueue(string $queue): array
+    {
+        $this->reconnect();
+
+        $collected = [];
+        $len = $this->getQueueLength($queue);
+        for ($i = 0; $i< $len; $i++) {
+            $item = phpiredis_command_bs($this->getRedis(), ['RPOPLPUSH', $queue, $queue]);
+            $collected[] = $item;
+            var_dump($i .': ' . $item);
+
+        }
+
+        return $collected;
     }
 
     public function getSorted(string $set, int $count, int $offset = 0, bool $reversed = false): Generator
