@@ -23,7 +23,6 @@ class RedisCacheService implements CacheServiceInterface
         private string $host,
         private ?int $port = self::DEFAULT_REDIS_PORT)
     {
-        var_dump($host);
         $this->reconnect();
     }
 
@@ -329,8 +328,6 @@ class RedisCacheService implements CacheServiceInterface
         for ($i = 0; $i< $len; $i++) {
             $item = phpiredis_command_bs($this->getRedis(), ['RPOPLPUSH', $queue, $queue]);
             $collected[] = $item;
-            var_dump($i .': ' . $item);
-
         }
 
         return $collected;
