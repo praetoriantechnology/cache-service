@@ -51,12 +51,12 @@ interface CacheServiceInterface
     /**
      * Puts entry on top of a queue.
      */
-    public function enqueue(string $queue, mixed $value): CacheServiceInterface;
+    public function enqueue(string $queue, mixed $value, bool $skipSerialization = false): CacheServiceInterface;
 
     /**
      * Pops out first element from the queue.
      */
-    public function pop(string $queue, int $range = 1): mixed;
+    public function pop(string $queue, int $range = 1, bool $skipSerialization = false): mixed;
 
     public function tag(string $key, string $tag, ?int $score = null): CacheServiceInterface;
 
