@@ -231,12 +231,15 @@ class RedisCacheService implements CacheServiceInterface
         return $this;
     }
 
-    public function untag(string $key, string $tag, bool $wasScored = false): self
+    public function untag(string $key, string $tag): self
     {
         $this->reconnect();
+        $type = phpiredis_command_bs($this->getRedis(), [
+            'TYPE', $tag
+        ]);
 
         $operations = [
-            [ $wasScored ? 'ZREM' : 'SREM', $tag, $key],
+            [ $type == 'zset' ? 'ZREM' : 'SREM', $tag, $key],
             ['SREM', self::TAGS_SET_NAME_PREFIX.$key, $tag],
         ];
 

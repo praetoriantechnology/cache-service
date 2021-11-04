@@ -60,7 +60,7 @@ interface CacheServiceInterface
 
     public function tag(string $key, string $tag, ?int $score = null): CacheServiceInterface;
 
-    public function untag(string $key, string $tag, bool $wasScored = false): CacheServiceInterface;
+    public function untag(string $key, string $tag): CacheServiceInterface;
 
     public function increase(string $key, int $value): CacheServiceInterface;
 
