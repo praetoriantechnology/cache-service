@@ -28,7 +28,7 @@ interface CacheServiceInterface
      *
      * @return CacheServiceInterface
      */
-    public function delete(string $key): ?CacheServiceInterface;
+    public function delete(string $key,  bool $skipTagsRemoval = false): ?CacheServiceInterface;
 
     /**
      * Deletes all entries.

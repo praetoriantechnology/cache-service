@@ -123,9 +123,11 @@ class RedisCacheService implements CacheServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function delete(string $key): self
+    public function delete(string $key, bool $skipTagsRemoval = false): self
     {
-        $this->untagKeyFromAllTags($key);
+        if ($skipTagsRemoval !== true) {
+            $this->untagKeyFromAllTags($key);
+        }
 
         $this->reconnect();
         phpiredis_command_bs($this->getRedis(), [
