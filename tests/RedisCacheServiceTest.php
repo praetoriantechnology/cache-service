@@ -837,7 +837,6 @@ final class RedisCacheServiceTest extends TestCase
         );
     }
 
-
     public function testGetSortedWithNullValues()
     {
         $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
@@ -894,6 +893,56 @@ final class RedisCacheServiceTest extends TestCase
         )->willReturnOnConsecutiveCalls(
             [],
             [],
+        );
+
+        $this->assertEquals(
+            [],
+            iterator_to_array($mock->getSorted('sample_set1', 5, 0))
+        );
+        $this->assertEquals(
+            [],
+            iterator_to_array($mock->getSorted('sample_set1', 5, 0, true))
+        );
+    }
+
+    public function testGetSortedWithExpiredKeys()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['getSorted', 'get'])
+            ->onlyMethods(['getRedis', 'reconnect']) //TODO: fix duplicate usage
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->exactly(12))->withConsecutive(
+            ['fake_redis', ['ZRANGE', 'sample_set1', 0, 5]],
+            ['fake_redis', ['GET', 'sample_key1']],
+            ['fake_redis', ['GET', 'sample_key2']],
+            ['fake_redis', ['GET', 'sample_key3']],
+            ['fake_redis', ['GET', 'sample_key4']],
+            ['fake_redis', ['GET', 'sample_key5']],
+            ['fake_redis', ['ZREVRANGE', 'sample_set1', 0, 5]],
+            ['fake_redis', ['GET', 'sample_key1']],
+            ['fake_redis', ['GET', 'sample_key2']],
+            ['fake_redis', ['GET', 'sample_key3']],
+            ['fake_redis', ['GET', 'sample_key4']],
+            ['fake_redis', ['GET', 'sample_key5']],
+        )->willReturnOnConsecutiveCalls(
+            ['sample_key1', 'sample_key2', 'sample_key3', 'sample_key4', 'sample_key5'],
+            null,
+            null,
+            null,
+            null,
+            null,
+            ['sample_key1', 'sample_key2', 'sample_key3', 'sample_key4', 'sample_key5'],
+            null,
+            null,
+            null,
+            null,
+            null
         );
 
         $this->assertEquals(
