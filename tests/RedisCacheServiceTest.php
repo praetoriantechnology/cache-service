@@ -721,36 +721,6 @@ final class RedisCacheServiceTest extends TestCase
         $this->assertEquals(10, $mock->getCardinality('sample_set_1'));
     }
 
-//    public function testGetQueue()
-//    {
-//        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
-//
-//        $mock = $this->getMockBuilder(self::TESTED_CLASS)
-//            ->setMethodsExcept(['getQueue'])
-//            ->onlyMethods(['getRedis', 'reconnect'])
-//            ->disableOriginalConstructor()
-//            ->getMock();
-//
-//        $mock->method('getRedis')->willReturn('fake_redis');
-//
-//        $phpiredisCommandBs->expects($this->once())
-//            ->with('fake_redis', ['LLEN', 'sample_queue_1'])
-//            ->willReturn(3);
-//
-//        $phpiredisCommandBs->expects($this->exactly(3))
-//            ->withConsecutive(
-//                ['fake_redis', ['RPOPLPUSH', 'sample_queue_1']],
-//                ['fake_redis', ['RPOPLPUSH', 'sample_queue_1']],
-//                ['fake_redis', ['RPOPLPUSH', 'sample_queue_1']],
-//            )->willReturnOnConsecutiveCalls(['test'], ['test2'], ['test3']);
-//
-//        var_dump($mock->getQueue('sample_queue_1'));
-//
-//        $this->assertEquals(['value1', 'value2', 'value3'], $mock->getQueue('sample_queue_1'));
-//        $this->assertEquals(['value2', 'value3'], $mock->getQueue('sample_queue_1'));
-//        $this->assertEquals(['value3'], $mock->getQueue('sample_queue_1'));
-//    }
-
     public function testGetSorted()
     {
         $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
@@ -953,5 +923,33 @@ final class RedisCacheServiceTest extends TestCase
             [],
             iterator_to_array($mock->getSorted('sample_set1', 5, 0, true))
         );
+    }
+
+    public function testGetQueue()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['getQueue'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->expects($this->exactly(1))
+            ->method('getQueueLength')
+            ->will($this->returnValue(3));
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->exactly(3))
+            ->withConsecutive(
+                ['fake_redis', ['RPOPLPUSH', 'sample_queue_1', 'sample_queue_1']],
+            )->willReturnOnConsecutiveCalls(
+                'testQueueData1',
+                'testQueueData2',
+                'testQueueData3'
+            );
+
+        $this->assertEquals(['testQueueData1', 'testQueueData2', 'testQueueData3'], $mock->getQueue('sample_queue_1'));
     }
 }
