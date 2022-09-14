@@ -676,4 +676,22 @@ final class RedisCacheServiceTest extends TestCase
 
         $this->assertSame($mock, $mock->clearByTag($sampleTag));
     }
+
+    public function testGetQueueLength()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(static::TESTED_CLASS)
+            ->setMethodsExcept(['getQueueLength'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->once())->with('fake_redis', ['LLEN', 'sample_queue_1'],
+        )->willReturn(10);
+
+        $this->assertEquals(10, $mock->getQueueLength('sample_queue_1'));
+    }
 }
