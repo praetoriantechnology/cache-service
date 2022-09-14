@@ -793,4 +793,47 @@ final class RedisCacheServiceTest extends TestCase
             iterator_to_array($mock->getSorted('sample_set1', 5, 0))
         );
     }
+
+    public function testGetSortedReversed()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['getSorted', 'get'])
+            ->onlyMethods(['getRedis', 'reconnect']) //TODO: fix duplicate usage
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+        $mock->expects($this->exactly(0))
+            ->method('delete')
+            ->will($this->returnValue($mock));
+
+        $phpiredisCommandBs->expects($this->exactly(6))->withConsecutive(
+            ['fake_redis', ['ZREVRANGE', 'sample_set1', 0, 5]],
+            ['fake_redis', ['GET', 'sample_key5']],
+            ['fake_redis', ['GET', 'sample_key4']],
+            ['fake_redis', ['GET', 'sample_key3']],
+            ['fake_redis', ['GET', 'sample_key2']],
+            ['fake_redis', ['GET', 'sample_key1']],
+        )->willReturnOnConsecutiveCalls(
+            ['sample_key5', 'sample_key4', 'sample_key3', 'sample_key2', 'sample_key1'],
+            igbinary_serialize('testdata5'),
+            igbinary_serialize('testdata4'),
+            igbinary_serialize('testdata3'),
+            igbinary_serialize('testdata2'),
+            igbinary_serialize('testdata1'),
+        );
+
+        $this->assertEquals(
+            [
+                'sample_key5' => 'testdata5',
+                'sample_key4' => 'testdata4',
+                'sample_key3' => 'testdata3',
+                'sample_key2' => 'testdata2',
+                'sample_key1' => 'testdata1',
+            ],
+            iterator_to_array($mock->getSorted('sample_set1', 5, 0, true))
+        );
+    }
 }
