@@ -836,4 +836,43 @@ final class RedisCacheServiceTest extends TestCase
             iterator_to_array($mock->getSorted('sample_set1', 5, 0, true))
         );
     }
+
+
+    public function testGetSortedWithNullValues()
+    {
+        $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['getSorted', 'get'])
+            ->onlyMethods(['getRedis', 'reconnect']) //TODO: fix duplicate usage
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $phpiredisCommandBs->expects($this->exactly(6))->withConsecutive(
+            ['fake_redis', ['ZRANGE', 'sample_set1', 0, 5]],
+            ['fake_redis', ['GET', 'sample_key1']],
+            ['fake_redis', ['GET', 'sample_key2']],
+            ['fake_redis', ['GET', 'sample_key3']],
+            ['fake_redis', ['GET', 'sample_key4']],
+            ['fake_redis', ['GET', 'sample_key5']],
+        )->willReturnOnConsecutiveCalls(
+            ['sample_key1', 'sample_key2', 'sample_key3', 'sample_key4', 'sample_key5'],
+            igbinary_serialize('testdata1'),
+            igbinary_serialize('testdata2'),
+            igbinary_serialize('testdata3'),
+            null,
+            null,
+        );
+
+        $this->assertEquals(
+            [
+                'sample_key1' => 'testdata1',
+                'sample_key2' => 'testdata2',
+                'sample_key3' => 'testdata3',
+            ],
+            iterator_to_array($mock->getSorted('sample_set1', 5, 0))
+        );
+    }
 }
