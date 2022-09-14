@@ -277,6 +277,35 @@ final class RedisCacheServiceTest extends TestCase
         $this->assertSame($mock, $mock->set('sample_key', $sampleValue, $tag, $ttl));
     }
 
+
+    public function testSetScore()
+    {
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['set'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleValue = ['a' => 5, 'b' => 'a', 'c' => ['x']];
+        $sampleValueSerialized = igbinary_serialize($sampleValue);
+        $tag = 'test_tag';
+
+        $phpiredisMultiCommandBs->expects($this->once())->with('fake_redis', [
+            ['SET', 'sample_key', $sampleValueSerialized],
+            ['ZADD', 'test_tag', 10, 'sample_key'],
+            ['SADD', 'TAGS:sample_key', 'test_tag'],
+        ]);
+
+        // $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
+        // $phpiredisCommandBs->expects($this->once())->with('fake_redis', ['SMEMBERS', 'TAGS:sample_key'])->willReturn([]);
+
+        $this->assertSame($mock, $mock->set('sample_key', $sampleValue, $tag, null, 10));
+    }
+
     public function testGetTaggedEmpty()
     {
         $phpiredisCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_command_bs');
