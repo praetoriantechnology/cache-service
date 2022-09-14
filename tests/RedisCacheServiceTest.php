@@ -599,6 +599,35 @@ final class RedisCacheServiceTest extends TestCase
         $this->assertSame($mock, $mock->tag($sampleKey, $sampleTag));
     }
 
+    public function testTagWithScore()
+    {
+        $phpiredisMultiCommandBs = $this->getFunctionMock('Praetorian\CacheService', 'phpiredis_multi_command_bs');
+
+        $mock = $this->getMockBuilder(self::TESTED_CLASS)
+            ->setMethodsExcept(['tag'])
+            ->onlyMethods(['getRedis', 'reconnect'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mock->method('getRedis')->willReturn('fake_redis');
+
+        $sampleKey = 'sample_key';
+        $sampleTag = 'sample_tag';
+        $score = 10;
+
+        $phpiredisMultiCommandBs->expects($this->once())->with('fake_redis', [
+            ['ZADD', $sampleTag, $score, $sampleKey],
+            ['SADD', 'TAGS:'.$sampleKey, $sampleTag],
+        ]);
+
+        $mock->expects($this->once())
+            ->method('get')
+            ->with($sampleKey)
+            ->willReturn('sample_value');
+
+        $this->assertSame($mock, $mock->tag($sampleKey, $sampleTag, $score));
+    }
+
     public function testTagInvalidNonExistingKey()
     {
         $mock = $this->getMockBuilder(self::TESTED_CLASS)
