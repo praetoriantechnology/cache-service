@@ -1,1 +1,1 @@
-docker exec -it cache-service bash
+docker exec -it cache-service-tester bash

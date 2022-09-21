@@ -1,1 +1,1 @@
-docker build -t cache-service .
+docker build -t cache-service-tester .
