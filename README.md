@@ -1,7 +1,7 @@
 preatoriantechnology/cache-service
 ==================================
 
-![Tests status](https://github.com/praetoriantechnology/cache-service/workflows/Tests/badge.svg)
+![Tests status](https://github.com/praetoriantechnology/cache-service/workflows/tests/badge.svg)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/praetoriantechnology/cache-service?label=latest%20version&sort=semver)
 
 Defines standard for caching services using CacheServiceInterface, provides fast
