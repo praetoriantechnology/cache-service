@@ -13,6 +13,11 @@
             "name": "Karol from Praetorian Technology",
             "email": "karol@praetorian.technology",
             "role": "Software Developer"
+        },
+        {
+            "name": "Davor Minchorov",
+            "email": "davor@praetorian.technology",
+            "role": "Software Developer"
         }
     ],
     "minimum-stability": "stable",
