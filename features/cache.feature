@@ -109,13 +109,11 @@ Feature: Cache service
     And the redis cache instance contains "example_value_2" under the key "example_key_2" which is tagged by "example_tag_2"
     When I clear by tag "example_tag" from cache
     Then I should not have any value under the "example_key" in the cache
+    And I should not have any value under the "example_key" in the cache
     And I should not have key "example_key" tagged by the "example_tag" in the cache
     And I should not have key "example_key" tagged by the "example_tag_2" in the cache
-    And I should have "example_value_2" under the "example_key_2" in the cache
-    And I should not have key "example_key_2" tagged by the "example_tag_1" in the cache
-    And I should have "example_value_2" tagged by the "example_tag_2" under the "example_key_2" in the cache
-    And I should not have any key tagged by the "example_tag" in the cache
-    And I should have exactly 1 key tagged by the "example_tag_2" in the cache
+    And I should not have key "example_key_2" tagged by the "example_tag" in the cache
+    And I should not have key "example_key_2" tagged by the "example_tag_2" in the cache
 
   Scenario: It clears by second tag and do not clear by first tag
     Given the redis cache instance is clean

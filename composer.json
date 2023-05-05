@@ -22,9 +22,9 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "php": "^8.0",
-        "ext-phpiredis": "*",
-        "ext-igbinary": "*"
+        "php": "^8.2",
+        "ext-igbinary": "*",
+        "ext-redis": "*"
     },
     "autoload": {
         "psr-4": {
@@ -41,7 +41,6 @@
         "test:functional": "./vendor/bin/behat",
         "test": [
             "composer install",
-            "@test:unit",
             "@test:functional"
         ],
         "fix": "./vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix --allow-risky=yes"

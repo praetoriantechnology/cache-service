@@ -1,4 +1,4 @@
-FROM php:8.1-cli
+FROM php:8.2-cli
 
 VOLUME [ "/var/www/html"]
 RUN mkdir ~/.ssh/
@@ -21,8 +21,6 @@ RUN pecl install decimal && docker-php-ext-enable decimal
 RUN pecl install ssh2-1.3.1 && docker-php-ext-enable ssh2
 RUN pecl install redis && docker-php-ext-enable redis
 RUN pecl install igbinary && docker-php-ext-enable igbinary
-
-RUN cd /tmp && rm -rf phpiredis && git clone https://github.com/nrk/phpiredis.git && cd phpiredis && phpize && ./configure --enable-phpiredis && make && make install && cd .. && docker-php-ext-enable phpiredis
 
 RUN pecl install xdebug
 RUN docker-php-ext-enable xdebug

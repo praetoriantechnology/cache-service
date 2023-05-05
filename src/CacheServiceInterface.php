@@ -12,7 +12,7 @@ interface CacheServiceInterface
      * Gets the unserialized object set using the provided key or null if such
      * object does not exist.
      */
-    public function get(string $key, bool $skipDeserialize = false): mixed;
+    public function get(string $key): mixed;
 
     /**
      * Sets the given object under the given key.
@@ -51,12 +51,12 @@ interface CacheServiceInterface
     /**
      * Puts entry on top of a queue.
      */
-    public function enqueue(string $queue, mixed $value, bool $skipSerialization = false): CacheServiceInterface;
+    public function enqueue(string $queue, mixed $value): CacheServiceInterface;
 
     /**
      * Pops out first element from the queue.
      */
-    public function pop(string $queue, int $range = 1, bool $skipSerialization = false): mixed;
+    public function pop(string $queue, int $range = 1): mixed;
 
     public function tag(string $key, string $tag, ?int $score = null): CacheServiceInterface;
 
