@@ -258,7 +258,6 @@ class RedisCacheService implements CacheServiceInterface
         $redis = $this->getRedis();
         $members = $redis->sMembers($tag);
         foreach ($members as $member) {
-            var_dump($member);
             $this->delete($member);
         }
 
