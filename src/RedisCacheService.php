@@ -22,9 +22,10 @@ class RedisCacheService implements CacheServiceInterface
 
     public function __construct(
         private string $host,
-        private ?int $port = self::DEFAULT_REDIS_PORT
+        private ?int $port = self::DEFAULT_REDIS_PORT,
+        private ?string $prefix = null
     ) {
-        $this->reconnect();
+
     }
 
     protected function reconnect()
@@ -32,6 +33,9 @@ class RedisCacheService implements CacheServiceInterface
         if (false === $this->getRedis() || null === $this->getRedis() || $this->getRedis()->isConnected() !== true) {
             $redis = new Redis();
             $redis->connect($this->host, $this->port);
+            if ($this->prefix) {
+                $redis->setOption(Redis::OPT_PREFIX, $this->prefix);
+            }
             $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_IGBINARY);
             $this->redis = $redis;
         }
