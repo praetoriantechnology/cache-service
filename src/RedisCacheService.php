@@ -152,8 +152,8 @@ class RedisCacheService implements CacheServiceInterface
             throw new InvalidArgumentException('Can\'t set null item');
         }
 
-        $redis = $this->getRedis();
         $this->reconnect();
+        $redis = $this->getRedis();
 
         if (null !== $ttl) {
             if ($ttl < static::MIN_TTL || $ttl > static::MAX_TTL) {
