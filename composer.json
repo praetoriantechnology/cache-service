@@ -2,7 +2,7 @@
     "name": "praetoriantechnology/cache-service",
     "description": "Caching service",
     "type": "library",
-    "license": ": MIT",
+    "license": "MIT",
     "authors": [
         {
             "name": "Bartosz from Praetorian Technology",
